@@ -1,12 +1,15 @@
 import httpx
 from fastapi import APIRouter, Request
+from sqlalchemy.orm import Session
 from starlette.responses import Response
+from fastapi import APIRouter, Depends
+from utils.db import get_db
 
 router = APIRouter(prefix="/proxy", tags=["Proxy"])
 
 
 @router.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
-async def proxy(full_path: str, request: Request):
+async def proxy(full_path: str, request: Request, db: Session = Depends(get_db)):
     query_string = request.url.query
     target_url = f"www.google.com/{full_path}"
     if query_string:

@@ -11,3 +11,7 @@ class UserCreate(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class ProxyCreate(BaseModel):
+    host: str
+    paths: list

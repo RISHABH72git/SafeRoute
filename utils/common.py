@@ -2,6 +2,7 @@ import hashlib
 import random
 import string
 import time
+from fastapi import Header, HTTPException
 
 
 def hash_password(password: str) -> str:
@@ -16,3 +17,9 @@ def generate_random_ids():
     for i in range(0, 10):
         unique += f"{lowercase[i]}{uppercase[i]}"
     return unique
+
+
+async def get_api_key(x_api_key: str = Header(None)):
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="Missing X-API-Key header")
+    return x_api_key

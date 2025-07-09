@@ -2,21 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from starlette.requests import Request
 
-from models.global_model import User, ApiKey
-from models.req_res_model import UserCreate, LoginRequest
-from utils.common import hash_password, generate_random_ids
+from models.global_model import User, ApiKey, ProxyPath, Proxy
+from models.req_res_model import UserCreate, LoginRequest, ProxyCreate
+from utils.common import hash_password, generate_random_ids, get_api_key
 from utils.db import get_db
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.get("/", )
-def get_apikey_info(request: Request, db: Session = Depends(get_db)):
-    api_key_header = request.headers.get("X-API-Key")
-    if not api_key_header:
-        raise HTTPException(status_code=400, detail="Missing API key in headers")
-
-    api_key = db.query(ApiKey).filter(ApiKey.apikey == api_key_header).first()
+def get_apikey_info(request: Request, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    api_key = db.query(ApiKey).filter(ApiKey.apikey == api_key).first()
     if not api_key:
         raise HTTPException(status_code=404, detail="Invalid API key")
 
@@ -53,3 +49,37 @@ def get_users(login: LoginRequest, db: Session = Depends(get_db)):
     return {"message": "User logged in",
             "data": {"id": db_user.id, "name": db_user.name, "email": db_user.email, "apikeys": db_user.apikeys}}
 
+
+@router.post("/proxy/add")
+def add_proxy(proxy: ProxyCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    apikey = db.query(ApiKey).filter(ApiKey.apikey == api_key).first()
+    proxy_data = db.query(Proxy).filter(Proxy.host == proxy.host, Proxy.user_id == apikey.user_id).first()
+    if proxy_data:
+        raise HTTPException(status_code=409, detail="Proxy already registered")
+    new_proxy = Proxy(host=proxy.host, user_id=apikey.user_id)
+    db.add(new_proxy)
+    db.commit()
+    db.refresh(new_proxy)
+    for path in proxy.paths:
+        proxy_path = ProxyPath(path=path, proxy_id=new_proxy.id)
+        db.add(proxy_path)
+        db.commit()
+        db.refresh(proxy_path)
+    return {"message": "Proxy added successfully",
+            "data": {"id": new_proxy.id, "host": new_proxy.host, "paths": new_proxy.paths}}
+
+
+@router.get("/proxy")
+def add_proxy(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    apikey = db.query(ApiKey).filter(ApiKey.apikey == api_key).first()
+    proxy_data = db.query(Proxy).filter(Proxy.user_id == apikey.user_id).all()
+    if not proxy_data:
+        raise HTTPException(status_code=404, detail="Proxies not Found")
+    proxies_data = []
+    for proxy in proxy_data:
+        proxies_data.append({
+            "id": proxy.id,
+            "host": proxy.host,
+            "paths": proxy.paths
+        })
+    return {"message": "Proxy list", "data": proxies_data}
