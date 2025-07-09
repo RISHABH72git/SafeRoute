@@ -1,12 +1,14 @@
 import httpx
 from fastapi import APIRouter, Request
 from starlette.responses import Response
-router = APIRouter()
+
+router = APIRouter(prefix="/proxy", tags=["Proxy"])
+
 
 @router.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 async def proxy(full_path: str, request: Request):
     query_string = request.url.query
-    target_url = f"{TARGET_URL}/{full_path}"
+    target_url = f"www.google.com/{full_path}"
     if query_string:
         target_url += f"?{query_string}"
     try:

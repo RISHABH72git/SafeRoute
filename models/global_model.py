@@ -12,6 +12,7 @@ class User(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(100))
     email = Column(String(150), unique=True, index=True)
+    password = Column(String(1000))
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow())
     apikeys = relationship("ApiKey", back_populates="owner")
