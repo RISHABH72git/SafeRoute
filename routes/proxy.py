@@ -3,11 +3,9 @@ from fastapi import Request
 from sqlalchemy.orm import Session, joinedload
 from starlette.responses import Response
 from fastapi import APIRouter, Depends
-
 from models.global_model import ApiKey, Proxy, ProxyPath
 from utils.common import get_api_key
 from utils.db import get_db
-
 router = APIRouter(prefix="/proxy", tags=["Proxy"])
 
 
