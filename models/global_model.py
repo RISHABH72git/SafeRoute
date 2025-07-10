@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 
 from config.mysql_database import Base
@@ -45,3 +45,16 @@ class ProxyPath(Base):
     path = Column(String(255), nullable=False)
     proxy_id = Column(String(36), ForeignKey("proxy.id"))
     proxy = relationship("Proxy", back_populates="paths")
+
+class APILog(Base):
+    __tablename__ = "api_logs"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    method = Column(String(10))
+    path = Column(String(500))
+    status_code = Column(Integer)
+    request_headers = Column(Text)
+    request_body = Column(Text)
+    response_body = Column(Text)
+    client_ip = Column(String(100))
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    apikey_id = Column(String(36), ForeignKey("apikeys.id"))

@@ -9,6 +9,7 @@ from utils.db import get_db
 
 class RateLimiterMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        print("Inside RateLimiterMiddleware")
         all_path = request.url.path
         if not all_path.startswith('/users'):
             db: Session = next(get_db())
